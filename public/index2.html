@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cab Booking Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: url('taxi4.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        form {
+            max-width: 400px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        input[type="email"],
+        input[type="text"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        #bookingDetails {
+            max-width: 400px;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .cab-category {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .cab-category label {
+            width: 120px;
+            color: #555;
+        }
+
+        .cab-category span {
+            width: 100px;
+            text-align: right;
+            color: #333;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .cab-img {
+            width: 100px;
+            height: auto;
+            margin: 0 auto;
+            display: block;
+            animation: fadeIn 1s ease;
+        }
+
+        .error-message {
+            color: #ff0000;
+            margin-top: 10px;
+        }
+
+        .map-container {
+            max-width: 500px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-container img {
+            width: 100%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <h1>Welcome to the Cab Booking Management System</h1>
+            <form id="bookingForm">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="source">Source:</label>
+                <input type="text" id="source" name="source" required>
+                <label for="destination">Destination:</label>
+                <input type="text" id="destination" name="destination" required>
+                <div id="cabCategories"></div>
+                <button type="submit">Book Cab</button>
+            </form>
+            <div id="bookingDetails"></div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+        <div class="map-container">
+            <img src="city-map.png" alt="City Map">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const bookingForm = document.getElementById('bookingForm');
+            const bookingDetails = document.getElementById('bookingDetails');
+            const cabCategoriesContainer = document.getElementById('cabCategories');
+            const errorMessage = document.getElementById('errorMessage');
+
+            function renderCabCategories(categories) {
+                cabCategoriesContainer.innerHTML = '';
+                categories.forEach(category => {
+                    const categoryElement = document.createElement('div');
+                    categoryElement.classList.add('cab-category');
+                    categoryElement.innerHTML = `
+                        <label>${category.type}</label>
+                        <span>$${category.price.toFixed(2)} per minute</span>
+                        <input type="radio" name="cabCategory" value="${category.type}" required>
+                        <img class="cab-img" src="${getCabImage(category.type)}" alt="${category.type}">
+                    `;
+                    cabCategoriesContainer.appendChild(categoryElement);
+                });
+            }
+
+            function fetchCabCategories() {
+                fetch('http://localhost:3000/cab-details')
+                    .then(response => response.json())
+                    .then(data => renderCabCategories(data.rates))
+                    .catch(error => {
+                        console.error('Error:', error);
+                        errorMessage.textContent = 'Failed to load cab categories. Please try again later.';
+                        errorMessage.style.display = 'block';
+                    });
+            }
+
+            function bookCab(formData) {
+                fetch('http://localhost:3000/book-cab', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const { message, cab, shortestPath, timeTaken, cost } = data;
+                    let bookingInfo = '<p>' + message + '</p>';
+                    if (cab) {
+                        bookingInfo += `
+                            <p>Cab ID: ${cab.cabId}</p>
+                            <p>Driver Name: ${cab.driverName}</p>
+                            <p>Source: ${cab.source}</p>
+                            <p>Destination: ${cab.destination}</p>
+                        `;
+                    }
+                    bookingInfo += `
+                        <p>Shortest Path: ${shortestPath.join(' -> ')}</p>
+                        <p>Time Taken: ${timeTaken} minutes</p>
+                        <p>Cost: $${cost}</p>
+                    `;
+                    bookingDetails.innerHTML = bookingInfo;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorMessage.textContent = 'An error occurred while processing your request. Please try again.';
+                    errorMessage.style.display = 'block';
+                });
+            }
+
+            function getCabImage(category) {
+                switch (category) {
+                    case 'Mini':
+                        return 'mini2bgrm.png';
+                    case 'Sedan':
+                        return 'sedanbgrm.png';
+                    case 'SUV':
+                        return 'suvbgrm.png';
+                    case 'SUV +':
+                        return 'suv+bgrm.png';
+                    case 'Premium':
+                        return 'premiumbgrm.png';
+                    default:
+                        return 'default.png';
+                }
+            }
+
+            bookingForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const formData = new FormData(bookingForm);
+                bookCab(formData);
+            });
+
+            fetchCabCategories();
+        });
+    </script>
+</body>
+</html>
