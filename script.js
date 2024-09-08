@@ -1,4 +1,4 @@
-const baseUrl = process.env.BASE_URL;
+const port = process.env.PORT;
 
 document.addEventListener("DOMContentLoaded", function () {
   const bookingForm = document.getElementById("bookingForm");
@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     event.preventDefault();
     const formData = new FormData(bookingForm);
 
-    fetch(`${baseUrl}/book-cab`, {
+    fetch(`${port}/book-cab`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
