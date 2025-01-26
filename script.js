@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     event.preventDefault();
     const formData = new FormData(bookingForm);
 
-    fetch(`${port}/book-cab`, {
+    fetch(`/book-cab`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
