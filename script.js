@@ -1,5 +1,3 @@
-const port = process.env.PORT;
-
 document.addEventListener("DOMContentLoaded", function () {
   const bookingForm = document.getElementById("bookingForm");
   const bookingDetails = document.getElementById("bookingDetails");

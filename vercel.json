@@ -1,3 +1,3 @@
 {
-  "rewrites": [{ "source": "/cab-details", "destination": "/" }]
+  "rewrites": [{ "source": "/cab-details", "destination": "/" }, {"source":"/book-cab", "destination":"/"}]
 }
